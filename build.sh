@@ -7,6 +7,7 @@ ncpus=${NUM_CPUS:-11}
 build() {
 	swift \
 		build \
+		-Xlinker --stack-first \
 		--configuration "${typ}" \
 		--triple wasm32-unknown-wasi \
 		--jobs "${ncpus}"

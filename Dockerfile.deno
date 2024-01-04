@@ -1,0 +1,27 @@
+FROM ghcr.io/swiftwasm/swift:5.8-jammy AS builder
+
+WORKDIR /app
+COPY ./Package.swift ./
+COPY ./Sources/      ./Sources/
+
+ARG NUM_CPUS=11
+RUN swift \
+	build \
+	--configuration release \
+	--triple wasm32-unknown-wasi \
+	--jobs ${NUM_CPUS}
+RUN cp ./.build/release/min-wasi-helo-swift.wasm /usr/local/bin/
+COPY ./run-deno.ts /usr/local/bin
+
+FROM denoland/deno:1.39.1 AS deno-builder
+COPY --from=builder /usr/local/bin/ /usr/local/bin/
+WORKDIR /usr/local/bin
+RUN deno cache ./run-deno.ts
+
+FROM denoland/deno:1.39.1
+COPY --from=deno-builder /usr/local/bin/ /usr/local/bin/
+COPY --from=deno-builder /deno-dir/ /deno-dir/
+
+WORKDIR /usr/local/bin
+
+CMD ["deno", "run", "--allow-read", "./run-deno.ts"]

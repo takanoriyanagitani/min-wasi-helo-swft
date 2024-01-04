@@ -1,21 +1,25 @@
 #!/bin/sh
 
-img=min-wasi-helo-swift
-ver=0.2.5
+typ="${RUNTIME_TYPE:-wasmer}"
+
+img="min-wasi-helo-swift-${typ}"
+ver=0.3.1
 tag="${img}:${ver}"
 
-build(){
+dfl="./Dockerfile.${typ}"
+
+build() {
 	docker \
 		buildx \
 		build \
 		--progress plain \
 		--tag "${tag}" \
-		--file ./Dockerfile \
+		--file "${dfl}" \
 		.
 }
 
-images(){
-  docker images "${tag}" | fgrep "${img}" | fgrep --silent "${ver}"
+images() {
+	docker images "${tag}" | fgrep "${img}" | fgrep --silent "${ver}"
 }
 
 images || build
